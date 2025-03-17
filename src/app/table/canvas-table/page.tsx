@@ -1,5 +1,14 @@
+"use client";
+
+import ShowPerformance from "@/app/components/ShowPerformance";
+
 const CanvasTable = () => {
-  return <h1>Canvas Table</h1>;
+  return (
+    <>
+      <ShowPerformance />
+      <canvas id="canvas" width="800" height="600" />
+    </>
+  );
 };
 
 export default CanvasTable;

@@ -1,9 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { Form, Table, Select } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { cities, districts, provinces } from "./data";
+import ShowPerformance, {
+  ShowPerformanceRef,
+} from "@/app/components/ShowPerformance";
 
 const { Option } = Select;
 
@@ -25,22 +28,15 @@ const DomTable: React.FC = () => {
   const [form] = Form.useForm<FormValues>();
 
   // 初始数据，每一行包含人员编号、以及省、市、区字段
-  const initialData: DataRecord[] = [
-    {
-      key: "1",
-      personnelNo: "1001",
+  const initialData: DataRecord[] = new Array(100)
+    .fill(null)
+    .map((_, index) => ({
+      key: index.toString(),
+      personnelNo: `${index + 1}`,
       province: undefined,
       city: undefined,
       district: undefined,
-    },
-    {
-      key: "2",
-      personnelNo: "1002",
-      province: undefined,
-      city: undefined,
-      district: undefined,
-    },
-  ];
+    }));
 
   // 定义表格列，泛型指定为 DataRecord
   const columns: ColumnsType<DataRecord> = [
@@ -156,16 +152,29 @@ const DomTable: React.FC = () => {
     },
   ];
 
+  const performanceRef = useRef<ShowPerformanceRef>(null);
+
+  const handleInputStart = () => {
+    // 调用 ShowPerformance 内部的 startInputMark 方法
+    performanceRef.current?.startInputMark();
+  };
+
   return (
-    <Form form={form} initialValues={{ records: initialData }}>
-      {/* 使用 Form 包裹 Table，数据直接取自 Form 中的 records */}
-      <Table<DataRecord>
-        rowKey="key"
-        dataSource={initialData}
-        columns={columns}
-        pagination={false}
-      />
-    </Form>
+    <>
+      <ShowPerformance ref={performanceRef} />
+      <Form
+        form={form}
+        onValuesChange={handleInputStart}
+        initialValues={{ records: initialData }}
+      >
+        <Table<DataRecord>
+          rowKey="key"
+          dataSource={initialData}
+          columns={columns}
+          pagination={false}
+        />
+      </Form>
+    </>
   );
 };
 
