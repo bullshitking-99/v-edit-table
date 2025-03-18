@@ -60,11 +60,11 @@ const ShowPerformance = forwardRef<ShowPerformanceRef>((_, ref) => {
   return (
     <>
       <div>
-        组件渲染耗时:{" "}
+        组件初始化耗时:{" "}
         {renderTime !== null ? `${renderTime.toFixed(2)} ms` : "计算中..."}
       </div>
       <div>
-        INP 指数: {inp !== null ? `${inp.toFixed(2)} ms` : "等待输入..."}
+        交互 INP 指数: {inp !== null ? `${inp.toFixed(2)} ms` : "等待输入..."}
       </div>
     </>
   );

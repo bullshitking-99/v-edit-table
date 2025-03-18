@@ -9,7 +9,7 @@ const Home = () => {
       <p className="text-gray-600">
         这是一个基于Canvas的表格编辑器，提供灵活的单元格编辑功能和高性能的渲染体验。
       </p>
-      <Link href="/table/canvas-table">
+      <Link href="/table/dom-table">
         <Button type="primary">开始体验</Button>
       </Link>
     </div>

@@ -9,8 +9,8 @@ const DisplayTable = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
   const options = [
-    { value: "/table/canvas-table", label: "Canvas Table" },
     { value: "/table/dom-table", label: "DOM Table" },
+    { value: "/table/canvas-table", label: "Canvas Table" },
   ];
 
   return (
