@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef } from "react";
-import { Form, Table, Select } from "antd";
+import { Form, Table, Select, Popover } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { cities, districts, provinces, streets, villages } from "./data";
 import ShowPerformance, {
@@ -110,7 +110,14 @@ const DomTable: React.FC = () => {
                       value={item.value}
                       disabled={selectedProvinces.has(item.value)}
                     >
-                      {item.label}
+                      <div id={item.label}></div>
+                      <Popover
+                        content={item.label + "是一个优美的省份"}
+                        title={item.label}
+                        placement="right"
+                      >
+                        <div style={{ width: "100%" }}>{item.label}</div>
+                      </Popover>
                     </Option>
                   ))}
                 </Select>
@@ -159,7 +166,13 @@ const DomTable: React.FC = () => {
                     : []
                   ).map((item) => (
                     <Option key={item.value} value={item.value}>
-                      {item.label}
+                      <Popover
+                        content={item.label + "是一个发达的市"}
+                        title={item.label}
+                        placement="right"
+                      >
+                        <div style={{ width: "100%" }}>{item.label}</div>
+                      </Popover>
                     </Option>
                   ))}
                 </Select>
@@ -199,7 +212,13 @@ const DomTable: React.FC = () => {
                     : []
                   ).map((item) => (
                     <Option key={item.value} value={item.value}>
-                      {item.label}
+                      <Popover
+                        content={item.label + "是一个安静的区"}
+                        title={item.label}
+                        placement="right"
+                      >
+                        <div style={{ width: "100%" }}>{item.label}</div>
+                      </Popover>
                     </Option>
                   ))}
                 </Select>
@@ -238,7 +257,13 @@ const DomTable: React.FC = () => {
                     : []
                   ).map((item) => (
                     <Option key={item.value} value={item.value}>
-                      {item.label}
+                      <Popover
+                        content={item.label + "是一个干净的街道"}
+                        title={item.label}
+                        placement="right"
+                      >
+                        <div style={{ width: "100%" }}>{item.label}</div>
+                      </Popover>
                     </Option>
                   ))}
                 </Select>
@@ -267,7 +292,13 @@ const DomTable: React.FC = () => {
                     : []
                   ).map((item) => (
                     <Option key={item.value} value={item.value}>
-                      {item.label}
+                      <Popover
+                        content={item.label + "是一个和谐的村庄"}
+                        title={item.label}
+                        placement="right"
+                      >
+                        <div style={{ width: "100%" }}>{item.label}</div>
+                      </Popover>
                     </Option>
                   ))}
                 </Select>
