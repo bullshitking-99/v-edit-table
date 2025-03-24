@@ -28,3 +28,7 @@ body {
 body .ant-form-item {
   margin-bottom: 0;
 }
+
+body .ant-table-cell {
+  vertical-align: top;
+}

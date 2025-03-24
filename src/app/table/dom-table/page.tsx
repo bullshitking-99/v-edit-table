@@ -3,7 +3,7 @@
 import React, { useMemo, useRef } from "react";
 import { Form, Table, Select } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { cities, districts, provinces } from "./data";
+import { cities, districts, provinces, streets, villages } from "./data";
 import ShowPerformance, {
   ShowPerformanceRef,
 } from "@/app/components/ShowPerformance";
@@ -11,12 +11,15 @@ import ShowPerformance, {
 const { Option } = Select;
 
 // 定义每行数据的类型
-interface DataRecord {
+// 定义数据行的类型
+export interface DataRecord {
   key: string;
   personnelNo: string;
   province?: string;
   city?: string;
   district?: string;
+  street?: string;
+  village?: string;
 }
 
 // 定义表单值的类型
@@ -28,7 +31,7 @@ const DomTable: React.FC = () => {
   const [form] = Form.useForm<FormValues>();
   const [recordNum, setRecordNum] = React.useState<number>(10);
 
-  // 初始数据，每一行包含人员编号、以及省、市、区字段
+  // 初始数据，每一行包含人员编号及省、市、区、街道、村字段
   const initialData: DataRecord[] = useMemo(
     () =>
       new Array(recordNum).fill(null).map((_, index) => ({
@@ -37,6 +40,8 @@ const DomTable: React.FC = () => {
         province: undefined,
         city: undefined,
         district: undefined,
+        street: undefined,
+        village: undefined,
       })),
     [recordNum]
   );
@@ -47,34 +52,71 @@ const DomTable: React.FC = () => {
       title: "人员编号",
       dataIndex: "personnelNo",
       key: "personnelNo",
-      // 该列不可编辑，直接展示
       render: (text: string) => <span>{text}</span>,
+      width: 100,
     },
     {
       title: "省",
       dataIndex: "province",
       key: "province",
       render: (_, record: DataRecord, index: number) => (
+        // shouldUpdate 仅监听除当前行外其它行省份拼接字符串的变化
         <Form.Item
-          name={["records", index, "province"]}
-          rules={[{ required: true, message: "请选择省份" }]}
+          shouldUpdate={(prev, cur) => {
+            const prevProvinces = (prev.records || [])
+              .filter((_: DataRecord, idx: number) => idx !== index)
+              .map((r: DataRecord) => r.province)
+              .join("|");
+            const curProvinces = (cur.records || [])
+              .filter((_: DataRecord, idx: number) => idx !== index)
+              .map((r: DataRecord) => r.province)
+              .join("|");
+            return prevProvinces !== curProvinces;
+          }}
+          noStyle
         >
-          <Select
-            placeholder="请选择省份"
-            onChange={() => {
-              // 当省份改变时，清空当前行的市和区的值
-              form.setFields([
-                { name: ["records", index, "city"], value: undefined },
-                { name: ["records", index, "district"], value: undefined },
-              ]);
-            }}
-          >
-            {provinces.map((item) => (
-              <Option key={item.value} value={item.value}>
-                {item.label}
-              </Option>
-            ))}
-          </Select>
+          {({ getFieldValue }) => {
+            const records: DataRecord[] = getFieldValue("records") || [];
+            // 收集除当前行外，已选择的省份
+            const selectedProvinces = new Set(
+              records
+                .filter((r, idx) => idx !== index && r.province)
+                .map((r) => r.province)
+            );
+            return (
+              <Form.Item
+                name={["records", index, "province"]}
+                rules={[{ required: true, message: "请选择省份" }]}
+              >
+                <Select
+                  placeholder="请选择省份"
+                  allowClear
+                  onChange={() => {
+                    // 省份变化时清空下级字段：市、区、街道、村
+                    form.setFields([
+                      { name: ["records", index, "city"], value: undefined },
+                      {
+                        name: ["records", index, "district"],
+                        value: undefined,
+                      },
+                      { name: ["records", index, "street"], value: undefined },
+                      { name: ["records", index, "village"], value: undefined },
+                    ]);
+                  }}
+                >
+                  {provinces.map((item) => (
+                    <Option
+                      key={item.value}
+                      value={item.value}
+                      disabled={selectedProvinces.has(item.value)}
+                    >
+                      {item.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            );
+          }}
         </Form.Item>
       ),
     },
@@ -83,11 +125,9 @@ const DomTable: React.FC = () => {
       dataIndex: "city",
       key: "city",
       render: (_, record: DataRecord, index: number) => (
-        // 使用 shouldUpdate 监控省份变化
         <Form.Item
-          shouldUpdate={(prevValues, curValues) =>
-            prevValues.records?.[index]?.province !==
-            curValues.records?.[index]?.province
+          shouldUpdate={(prev, cur) =>
+            prev.records?.[index]?.province !== cur.records?.[index]?.province
           }
           noStyle
         >
@@ -100,23 +140,28 @@ const DomTable: React.FC = () => {
               >
                 <Select
                   placeholder="请选择市"
+                  allowClear
+                  disabled={!province}
                   onChange={() => {
-                    // 当市改变时，清空当前行的区的值
+                    // 市变化时清空下级字段：区、街道、村
                     form.setFields([
                       {
                         name: ["records", index, "district"],
                         value: undefined,
                       },
+                      { name: ["records", index, "street"], value: undefined },
+                      { name: ["records", index, "village"], value: undefined },
                     ]);
                   }}
                 >
-                  {(cities[province as keyof typeof cities] || []).map(
-                    (item) => (
-                      <Option key={item.value} value={item.value}>
-                        {item.label}
-                      </Option>
-                    )
-                  )}
+                  {(province
+                    ? cities[province as keyof typeof cities] || []
+                    : []
+                  ).map((item) => (
+                    <Option key={item.value} value={item.value}>
+                      {item.label}
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
             );
@@ -129,7 +174,6 @@ const DomTable: React.FC = () => {
       dataIndex: "district",
       key: "district",
       render: (_, record: DataRecord, index: number) => (
-        // 使用 dependencies 监听市的变化
         <Form.Item dependencies={[["records", index, "city"]]} noStyle>
           {({ getFieldValue }) => {
             const city = getFieldValue(["records", index, "city"]);
@@ -138,14 +182,94 @@ const DomTable: React.FC = () => {
                 name={["records", index, "district"]}
                 rules={[{ required: true, message: "请选择区" }]}
               >
-                <Select placeholder="请选择区">
-                  {(districts[city as keyof typeof districts] || []).map(
-                    (item) => (
-                      <Option key={item.value} value={item.value}>
-                        {item.label}
-                      </Option>
-                    )
-                  )}
+                <Select
+                  placeholder="请选择区"
+                  allowClear
+                  disabled={!city}
+                  onChange={() => {
+                    // 区变化时清空下级字段：街道、村
+                    form.setFields([
+                      { name: ["records", index, "street"], value: undefined },
+                      { name: ["records", index, "village"], value: undefined },
+                    ]);
+                  }}
+                >
+                  {(city
+                    ? districts[city as keyof typeof districts] || []
+                    : []
+                  ).map((item) => (
+                    <Option key={item.value} value={item.value}>
+                      {item.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            );
+          }}
+        </Form.Item>
+      ),
+    },
+    {
+      title: "街道",
+      dataIndex: "street",
+      key: "street",
+      render: (_, record: DataRecord, index: number) => (
+        <Form.Item dependencies={[["records", index, "district"]]} noStyle>
+          {({ getFieldValue }) => {
+            const district = getFieldValue(["records", index, "district"]);
+            return (
+              <Form.Item
+                name={["records", index, "street"]}
+                rules={[{ required: true, message: "请选择街道" }]}
+              >
+                <Select
+                  placeholder="请选择街道"
+                  allowClear
+                  disabled={!district}
+                  onChange={() => {
+                    // 街道变化时清空村字段
+                    form.setFields([
+                      { name: ["records", index, "village"], value: undefined },
+                    ]);
+                  }}
+                >
+                  {(district
+                    ? streets[district as keyof typeof streets] || []
+                    : []
+                  ).map((item) => (
+                    <Option key={item.value} value={item.value}>
+                      {item.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            );
+          }}
+        </Form.Item>
+      ),
+    },
+    {
+      title: "村",
+      dataIndex: "village",
+      key: "village",
+      render: (_, record: DataRecord, index: number) => (
+        <Form.Item dependencies={[["records", index, "street"]]} noStyle>
+          {({ getFieldValue }) => {
+            const street = getFieldValue(["records", index, "street"]);
+            return (
+              <Form.Item
+                name={["records", index, "village"]}
+                rules={[{ required: true, message: "请选择村" }]}
+              >
+                <Select placeholder="请选择村" allowClear disabled={!street}>
+                  {(street
+                    ? villages[street as keyof typeof villages] || []
+                    : []
+                  ).map((item) => (
+                    <Option key={item.value} value={item.value}>
+                      {item.label}
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
             );
